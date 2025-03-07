@@ -1268,6 +1268,9 @@ main(int argc, char **argv)
         if (user == NULL) {
             user = conf->user;
         }
+        if (mode == TCP_ONLY) {
+            mode = conf->mode;
+        }
         if (mtu == 0) {
             mtu = conf->mtu;
         }
