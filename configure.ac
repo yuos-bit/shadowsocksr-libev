@@ -315,7 +315,8 @@ AC_CONFIG_FILES([ shadowsocks-libev.pc
                  Makefile
                  libcork/Makefile
                  libipset/Makefile
-                 src/Makefile])
+                 src/Makefile
+		 server/Makefile])
 AM_COND_IF([USE_SYSTEM_SHARED_LIB],[
     AC_CHECK_LIB([udns], [dns_dnlen], ,[AC_MSG_ERROR([Couldn't find libudns. Try installing libudns-dev or udns-devel.])])
     AC_CHECK_LIB([ev], [ev_loop_destroy], ,[AC_MSG_ERROR([Couldn't find libev. Try installing libev-dev@<:@el@:>@.])])

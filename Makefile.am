@@ -1,7 +1,7 @@
 if USE_SYSTEM_SHARED_LIB
-SUBDIRS = libcork libipset src
+SUBDIRS = libcork libipset src server
 else
-SUBDIRS = libsodium libcork libipset libudns libev src
+SUBDIRS = libsodium libcork libipset libudns libev src server
 endif
 
 if ENABLE_DOCUMENTATION
