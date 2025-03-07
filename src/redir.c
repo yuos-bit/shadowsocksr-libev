@@ -75,6 +75,14 @@
 #define IP6T_SO_ORIGINAL_DST 80
 #endif
 
+#ifndef IP_TRANSPARENT
+#define IP_TRANSPARENT       19
+#endif
+
+#ifndef IPV6_TRANSPARENT
+#define IPV6_TRANSPARENT     75
+#endif
+
 #include "includeobfs.h" // I don't want to modify makefile
 #include "jconf.h"
 
@@ -113,6 +121,7 @@ static int nofile = 0;
 static struct cork_dllist inactive_profiles;
 static listen_ctx_t *current_profile;
 static struct cork_dllist all_connections;
+static int tcp_tproxy = 0; /* use tproxy instead of redirect (for tcp) */
 
 int
 getdestaddr(int fd, struct sockaddr_storage *destaddr)
@@ -120,16 +129,25 @@ getdestaddr(int fd, struct sockaddr_storage *destaddr)
     socklen_t socklen = sizeof(*destaddr);
     int error         = 0;
 
-    error = getsockopt(fd, SOL_IPV6, IP6T_SO_ORIGINAL_DST, destaddr, &socklen);
-    if (error) { // Didn't find a proper way to detect IP version.
+
 #if defined(__FreeBSD__)
         error = getsockname(fd, (struct sockaddr *)destaddr, &socklen);
 #else
-        error = getsockopt(fd, SOL_IP, SO_ORIGINAL_DST, destaddr, &socklen);
 #endif
-        if (error) {
-            return -1;
-        }
+	if (tcp_tproxy) {
+        error = getsockname(fd, (void *)destaddr, &socklen);
+    } else {
+		error = getsockopt(fd, SOL_IPV6, IP6T_SO_ORIGINAL_DST, destaddr, &socklen);
+		if (error) { // Didn't find a proper way to detect IP version.
+			error = getsockopt(fd, SOL_IP, SO_ORIGINAL_DST, destaddr, &socklen);
+			if (error) {
+				return -1;
+			}
+		}
+	}
+	
+	if (error) {
+        return -1;
     }
     return 0;
 }
@@ -175,6 +193,23 @@ create_and_bind(const char *addr, const char *port)
         int err = set_reuseport(listen_sock);
         if (err == 0) {
             LOGI("tcp port reuse enabled");
+        }
+		
+		if (tcp_tproxy) {
+            int level = 0, optname = 0;
+            if (rp->ai_family == AF_INET) {
+                level = IPPROTO_IP;
+                optname = IP_TRANSPARENT;
+            } else {
+                level = IPPROTO_IPV6;
+                optname = IPV6_TRANSPARENT;
+            }
+
+            if (setsockopt(listen_sock, level, optname, &opt, sizeof(opt)) != 0) {
+                ERROR("setsockopt IP_TRANSPARENT");
+                exit(EXIT_FAILURE);
+            }
+            LOGI("tcp tproxy mode enabled");
         }
 
         s = bind(listen_sock, rp->ai_addr, rp->ai_addrlen);
@@ -1110,7 +1145,7 @@ main(int argc, char **argv)
 
     USE_TTY();
 
-    while ((c = getopt_long(argc, argv, "f:s:p:l:k:t:m:c:b:a:n:huUvA6"
+    while ((c = getopt_long(argc, argv, "f:s:p:l:k:t:m:c:b:a:n:huUTvA6"
                             "O:o:G:g:",
                             long_options, &option_index)) != -1) {
         switch (c) {
@@ -1184,6 +1219,9 @@ main(int argc, char **argv)
             break;
         case 'U':
             mode = UDP_ONLY;
+            break;
+		case 'T':
+            tcp_tproxy = 1;
             break;
         case 'v':
             verbose = 1;
@@ -1270,6 +1308,9 @@ main(int argc, char **argv)
         }
         if (mode == TCP_ONLY) {
             mode = conf->mode;
+        }
+		if (tcp_tproxy == 0) {
+            tcp_tproxy = conf->tcp_tproxy;
         }
         if (mtu == 0) {
             mtu = conf->mtu;

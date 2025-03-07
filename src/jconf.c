@@ -338,7 +338,11 @@ read_jconf(const char *file)
                     check_json_value_type(value, json_boolean,
                                           "invalid config file: option 'ipv6_first' must be a boolean");
                     conf.ipv6_first = value->u.boolean;
-                }
+                } else if (strcmp(name, "tcp_tproxy") == 0) {
+                    check_json_value_type(value, json_boolean,
+                                          "invalid config file: option 'tcp_tproxy' must be a boolean");
+					conf.tcp_tproxy = value->u.boolean;
+				}
             }
         }
     } else {

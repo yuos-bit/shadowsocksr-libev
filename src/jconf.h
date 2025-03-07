@@ -105,6 +105,7 @@ typedef struct {
     int mtu;
     int mptcp;
     int ipv6_first;
+	int tcp_tproxy;
 } jconf_t;
 
 jconf_t *read_jconf(const char *file);
