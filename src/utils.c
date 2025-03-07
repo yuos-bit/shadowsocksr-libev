@@ -258,8 +258,6 @@ usage()
 {
     printf("\n");
     printf("shadowsocks-libev %s with %s\n\n", VERSION, USING_CRYPTO);
-    printf(
-        "  maintained by Max Lv <max.c.lv@gmail.com> and Linus Yang <laokongzi@gmail.com>\n\n");
     printf("  usage:\n\n");
 #ifdef MODULE_LOCAL
     printf("    ss-local\n");
@@ -272,6 +270,25 @@ usage()
 #elif MODULE_MANAGER
     printf("    ss-manager\n");
 #endif
+    printf("\n");
+    printf(
+        "       -o <obfs>                  Obfs of your remote server: plain,\n");
+    printf(
+        "                                  http_simple, http_post and tls1.2_ticket_auth.\n");
+    printf(
+        "       -g <obfs-param>            Obfs-Param of your remote server.\n");
+    printf(
+        "       -O <protocol>              Protocol of your remote server: origin,\n");
+    printf(
+        "                                  auth_sha1, auth_sha1_v2, auth_sha1_v4,\n");
+    printf(
+        "                                  auth_aes128_md5, auth_aes128_sha1,\n");
+    printf(
+        "                                  auth_chain_a, auth_chain_b, auth_chain_c,\n");
+    printf(
+        "                                  auth_chain_d, auth_chain_e and auth_chain_f.\n");
+    printf(
+        "       -G <protocol-param>        Protocol-Param of your remote server.\n");
     printf("\n");
     printf(
         "       -s <server_host>           Host name or IP address of your remote server.\n");
